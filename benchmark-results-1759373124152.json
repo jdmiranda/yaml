@@ -1,0 +1,66 @@
+{
+  "timestamp": "2025-10-02T02:45:24.152Z",
+  "results": [
+    {
+      "name": "Simple YAML parse()",
+      "iterations": 10000,
+      "totalTime": 687.364792,
+      "avgTime": 0.06873647919999999,
+      "opsPerSec": 14548
+    },
+    {
+      "name": "Simple YAML parseDocument()",
+      "iterations": 10000,
+      "totalTime": 664.232667,
+      "avgTime": 0.0664232667,
+      "opsPerSec": 15055
+    },
+    {
+      "name": "Medium YAML parse()",
+      "iterations": 1000,
+      "totalTime": 2192.612375,
+      "avgTime": 2.192612375,
+      "opsPerSec": 456
+    },
+    {
+      "name": "Medium YAML parseDocument()",
+      "iterations": 1000,
+      "totalTime": 2076.072417,
+      "avgTime": 2.076072417,
+      "opsPerSec": 482
+    },
+    {
+      "name": "Large YAML parse()",
+      "iterations": 100,
+      "totalTime": 17985.753041,
+      "avgTime": 179.85753041,
+      "opsPerSec": 6
+    },
+    {
+      "name": "Large YAML parseDocument()",
+      "iterations": 100,
+      "totalTime": 16619.6925,
+      "avgTime": 166.19692500000002,
+      "opsPerSec": 6
+    },
+    {
+      "name": "Multi-doc parseAllDocuments()",
+      "iterations": 5000,
+      "totalTime": 120.553792,
+      "avgTime": 0.0241107584,
+      "opsPerSec": 41475
+    },
+    {
+      "name": "Complex nested parse()",
+      "iterations": 5000,
+      "totalTime": 304.47175,
+      "avgTime": 0.06089435,
+      "opsPerSec": 16422
+    }
+  ],
+  "environment": {
+    "node": "v24.9.0",
+    "platform": "darwin",
+    "arch": "arm64"
+  }
+}
