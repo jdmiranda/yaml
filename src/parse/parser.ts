@@ -13,6 +13,10 @@ import type {
 } from './cst.ts'
 import { prettyToken, tokenType } from './cst.ts'
 import { Lexer } from './lexer.ts'
+import { LRUCache, hashString } from '../cache/lru-cache.ts'
+
+// Cache for tokenization results
+const tokenCache = new LRUCache<string, Token[]>(1000)
 
 function includesToken(list: SourceToken[], type: SourceToken['type']) {
   for (let i = 0; i < list.length; ++i) if (list[i].type === type) return true
@@ -177,6 +181,8 @@ export class Parser {
    * @returns A generator of tokens representing each directive, document, and other structure.
    */
   *parse(source: string, incomplete = false): Generator<Token, void> {
+    // Token caching disabled in parser due to stateful nature
+    // Caching is handled at higher levels (parse/stringify in public-api.ts)
     if (this.onNewLine && this.offset === 0) this.onNewLine(0)
     for (const lexeme of this.lexer.lex(source, incomplete))
       yield* this.next(lexeme)

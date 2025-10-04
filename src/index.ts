@@ -42,7 +42,9 @@ export {
   parse,
   parseAllDocuments,
   parseDocument,
-  stringify
+  stringify,
+  getCacheStats,
+  clearCaches
 } from './public-api.ts'
 
 export type { TagId, Tags } from './schema/tags.ts'

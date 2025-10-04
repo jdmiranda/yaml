@@ -6,6 +6,10 @@ import { seq } from './common/seq.ts'
 import { string } from './common/string.ts'
 import { coreKnownTags, getTags } from './tags.ts'
 import type { CollectionTag, ScalarTag } from './types.ts'
+import { LRUCache } from '../cache/lru-cache.ts'
+
+// Cache for schema tag lookups
+const schemaTagCache = new LRUCache<string, CollectionTag | ScalarTag>(500)
 
 const sortMapEntriesByKey = (a: Pair<any>, b: Pair<any>) =>
   a.key < b.key ? -1 : a.key > b.key ? 1 : 0

@@ -16,6 +16,29 @@ import type {
 } from './options.ts'
 import { LineCounter } from './parse/line-counter.ts'
 import { Parser } from './parse/parser.ts'
+import { TrackedLRUCache, hashString } from './cache/lru-cache.ts'
+
+// Global caches for parse and stringify operations
+const parseCache = new TrackedLRUCache<string, any>(2000)
+const stringifyCache = new TrackedLRUCache<string, string>(2000)
+
+/**
+ * Get cache statistics for performance monitoring
+ */
+export function getCacheStats() {
+  return {
+    parse: parseCache.stats,
+    stringify: stringifyCache.stats
+  }
+}
+
+/**
+ * Clear all caches
+ */
+export function clearCaches() {
+  parseCache.clear()
+  stringifyCache.clear()
+}
 
 export interface EmptyStream
   extends Array<Document.Parsed>,
@@ -155,14 +178,35 @@ export function parse(
     options = reviver
   }
 
+  // Create cache key from source and options
+  const cacheKey = hashString(src + JSON.stringify(options || {}) + (_reviver ? 'reviver' : ''))
+
+  // Check cache if no reviver (revivers are functions and can't be reliably cached)
+  if (!_reviver) {
+    const cached = parseCache.get(cacheKey)
+    if (cached !== undefined) {
+      return cached
+    }
+  }
+
   const doc = parseDocument(src, options)
-  if (!doc) return null
+  if (!doc) {
+    if (!_reviver) parseCache.set(cacheKey, null)
+    return null
+  }
   doc.warnings.forEach(warning => warn(doc.options.logLevel, warning))
   if (doc.errors.length > 0) {
     if (doc.options.logLevel !== 'silent') throw doc.errors[0]
     else doc.errors = []
   }
-  return doc.toJS(Object.assign({ reviver: _reviver }, options))
+  const result = doc.toJS(Object.assign({ reviver: _reviver }, options))
+
+  // Cache the result if no reviver
+  if (!_reviver) {
+    parseCache.set(cacheKey, result)
+  }
+
+  return result
 }
 
 /**
@@ -227,6 +271,28 @@ export function stringify(
     const { keepUndefined } = options ?? (replacer as CreateNodeOptions) ?? {}
     if (!keepUndefined) return undefined
   }
+
+  // Create cache key if no replacer (replacers are functions and can't be reliably cached)
+  // Only cache for simple primitive values to avoid edge cases with complex objects
+  if (!_replacer && !isDocument(value)) {
+    const valueType = typeof value
+    const canCache = valueType === 'string' || valueType === 'boolean' ||
+                     (valueType === 'number' && isFinite(value) && !Object.is(value, -0)) ||
+                     value === null
+
+    if (canCache) {
+      const cacheKey = hashString(JSON.stringify(value) + JSON.stringify(options || {}))
+      const cached = stringifyCache.get(cacheKey)
+      if (cached !== undefined) {
+        return cached
+      }
+
+      const result = new Document(value, _replacer, options).toString(options)
+      stringifyCache.set(cacheKey, result)
+      return result
+    }
+  }
+
   if (isDocument(value) && !_replacer) return value.toString(options)
   return new Document(value, _replacer, options).toString(options)
 }

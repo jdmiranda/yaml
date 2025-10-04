@@ -13,6 +13,10 @@ import type {
 import type { Token } from '../parse/cst.ts'
 import { composeDoc } from './compose-doc.ts'
 import { resolveEnd } from './resolve-end.ts'
+import { LRUCache } from '../cache/lru-cache.ts'
+
+// Cache for anchor resolutions
+const anchorCache = new LRUCache<string, any>(500)
 
 type ErrorSource =
   | number

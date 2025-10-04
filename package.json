@@ -41,6 +41,7 @@
     "build": "npm run build:node && npm run build:browser",
     "build:browser": "rollup -c config/rollup.browser-config.mjs",
     "build:node": "rollup -c config/rollup.node-config.mjs",
+    "benchmark": "npm run build:node && node benchmarks/performance.js",
     "clean": "git clean -fdxe node_modules",
     "lint": "eslint config/ src/",
     "prettier": "prettier --write .",
