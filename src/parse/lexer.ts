@@ -78,17 +78,10 @@ type State =
   | 'block-scalar'
   | 'plain-scalar'
 
+// Performance optimization: Use Set for O(1) lookup instead of switch
+const emptyChars = new Set([' ', '\n', '\r', '\t'])
 function isEmpty(ch: string) {
-  switch (ch) {
-    case undefined:
-    case ' ':
-    case '\n':
-    case '\r':
-    case '\t':
-      return true
-    default:
-      return false
-  }
+  return !ch || emptyChars.has(ch)
 }
 
 const hexDigits = new Set('0123456789ABCDEFabcdef')
@@ -210,7 +203,7 @@ export class Lexer {
         : -1
     }
     if (ch === '-' || ch === '.') {
-      const dt = this.buffer.substr(offset, 3)
+      const dt = this.buffer.slice(offset, offset + 3)
       if ((dt === '---' || dt === '...') && isEmpty(this.buffer[offset + 3]))
         return -1
     }
@@ -223,9 +216,9 @@ export class Lexer {
       end = this.buffer.indexOf('\n', this.pos)
       this.lineEndPos = end
     }
-    if (end === -1) return this.atEnd ? this.buffer.substring(this.pos) : null
+    if (end === -1) return this.atEnd ? this.buffer.slice(this.pos) : null
     if (this.buffer[end - 1] === '\r') end -= 1
-    return this.buffer.substring(this.pos, end)
+    return this.buffer.slice(this.pos, end)
   }
 
   private hasChars(n: number) {
@@ -233,7 +226,7 @@ export class Lexer {
   }
 
   private setNext(state: State) {
-    this.buffer = this.buffer.substring(this.pos)
+    this.buffer = this.buffer.slice(this.pos)
     this.pos = 0
     this.lineEndPos = null
     this.next = state
@@ -241,7 +234,7 @@ export class Lexer {
   }
 
   private peek(n: number) {
-    return this.buffer.substr(this.pos, n)
+    return this.buffer.slice(this.pos, this.pos + n)
   }
 
   private *parseNext(next: State) {
@@ -612,7 +605,7 @@ export class Lexer {
 
   private *pushCount(n: number) {
     if (n > 0) {
-      yield this.buffer.substr(this.pos, n)
+      yield this.buffer.slice(this.pos, this.pos + n)
       this.pos += n
       return n
     }
@@ -701,7 +694,7 @@ export class Lexer {
     } while (ch === ' ' || (allowTabs && ch === '\t'))
     const n = i - this.pos
     if (n > 0) {
-      yield this.buffer.substr(this.pos, n)
+      yield this.buffer.slice(this.pos, this.pos + n)
       this.pos = i
     }
     return n
